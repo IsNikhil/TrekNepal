@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(cmd.exe /c \"where uvicorn 2>nul & where python 2>nul & echo PATH=%PATH%\")"
-    ]
-  }
-}
