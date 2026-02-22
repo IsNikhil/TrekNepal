@@ -30,4 +30,5 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-.claude
+.claude__pycache__/ 
+*.pyc 
