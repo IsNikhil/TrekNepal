@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 from data.seed_trails import TRAILS
+from schemas.trail import Trail, TrailListResponse
+from services.trail_service import list_trails as list_trails_service
 
 router = APIRouter(prefix="/trails", tags=["trails"])
 
 
-@router.get("")
+@router.get("", response_model=TrailListResponse)
 def list_trails(
     q: Optional[str] = Query(None, description="Search query"),
     difficulty: Optional[str] = Query(None, description="Filter by difficulty"),
@@ -16,52 +18,18 @@ def list_trails(
     offset: int = Query(0),
 ):
     """List and filter trekking routes."""
-    results = list(TRAILS)
-
-    # Search
-    if q:
-        q_lower = q.lower()
-        results = [
-            t for t in results
-            if q_lower in t["name"].lower()
-            or q_lower in t["region"].lower()
-            or any(q_lower in tag.lower() for tag in t["tags"])
-        ]
-
-    # Difficulty filter
-    if difficulty and difficulty != "all":
-        results = [t for t in results if t["difficulty"] == difficulty]
-
-    # Region filter
-    if region:
-        results = [t for t in results if region.lower() in t["region"].lower()]
-
-    # Max days filter
-    if max_days:
-        results = [t for t in results if t["duration_days"] <= max_days]
-
-    # Sort
-    sort_map = {
-        "rating": lambda t: -t["rating"],
-        "distance": lambda t: t["distance_km"],
-        "elevation": lambda t: t["max_elevation_m"],
-        "reviews": lambda t: -t["review_count"],
-    }
-    if sort_by in sort_map:
-        results.sort(key=sort_map[sort_by])
-
-    total = len(results)
-    results = results[offset : offset + limit]
-
-    return {
-        "total": total,
-        "offset": offset,
-        "limit": limit,
-        "trails": results,
-    }
+    return list_trails_service(
+        q=q,
+        difficulty=difficulty,
+        region=region,
+        max_days=max_days,
+        sort_by=sort_by,
+        limit=limit,
+        offset=offset,
+    )
 
 
-@router.get("/{trail_id}")
+@router.get("/{trail_id}", response_model=Trail)
 def get_trail(trail_id: str):
     """Get a single trail by ID."""
     trail = next((t for t in TRAILS if t["id"] == trail_id), None)
