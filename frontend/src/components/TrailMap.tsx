@@ -1,11 +1,33 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { Trail } from '@/data/trails';
+
+interface Lodge {
+  name: string;
+  elevation: number;
+}
+
+interface TrailSummary {
+  id: string;
+  name: string;
+  region: string;
+  rating: number;
+  distance: number;
+  maxElevation: number;
+  lat: number;
+  lng: number;
+}
+
+interface TrailDetail extends TrailSummary {
+  coordinates: [number, number][];
+  startPoint: string;
+  endPoint: string;
+  lodges: Lodge[];
+}
 
 interface Props {
-  trail?: Trail;
-  trails?: Trail[];
+  trail?: TrailDetail;
+  trails?: TrailSummary[];
   height?: string;
   showRoute?: boolean;
 }

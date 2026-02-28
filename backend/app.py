@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.health import router as health_router
 from routes.trails import router as trails_router
 
+
 app = FastAPI(
     title="Trek Nepal API",
     description="Backend API for TrekNepal — Nepal's most accurate trekking companion.",

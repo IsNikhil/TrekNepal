@@ -1,16 +1,37 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { SlidersHorizontal, Grid3X3, Map as MapIcon, Search, X, ChevronDown, Mountain } from 'lucide-react';
-import TrailCard from '@/components/TrailCard';
-import { trails, type Difficulty } from '@/data/trails';
+import TrailCard, { TrailCardModel } from '@/components/TrailCard';
+import { ApiTrail, fetchTrails } from '@/lib/api';
 import clsx from 'clsx';
 
 // Dynamic import to avoid SSR issue with Leaflet
 const TrailMap = dynamic(() => import('@/components/TrailMap'), { ssr: false });
 
 type ViewMode = 'grid' | 'map' | 'split';
+type Difficulty = 'easy' | 'moderate' | 'hard' | 'expert';
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800&q=80';
+
+function toTrailCardModel(trail: ApiTrail): TrailCardModel {
+  return {
+    id: trail.id,
+    name: trail.name,
+    region: trail.region,
+    difficulty: trail.difficulty,
+    lat: trail.lat,
+    lng: trail.lng,
+    distance: trail.distance_km,
+    duration: `${trail.duration_days} days`,
+    maxElevation: trail.max_elevation_m,
+    rating: trail.rating,
+    reviewCount: trail.review_count,
+    image: FALLBACK_IMAGE,
+    tags: trail.tags,
+  };
+}
 
 const DIFFICULTY_OPTIONS: { value: Difficulty | 'all'; label: string; color: string }[] = [
   { value: 'all', label: 'All', color: 'border-gray-300 text-gray-700' },
@@ -37,39 +58,51 @@ export default function ExplorePage() {
   const [sortBy, setSortBy] = useState('rating');
   const [maxDays, setMaxDays] = useState(30);
   const [showFilters, setShowFilters] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [trails, setTrails] = useState<TrailCardModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    let result = [...trails];
+  useEffect(() => {
+    let cancelled = false;
 
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      result = result.filter(t =>
-        t.name.toLowerCase().includes(q) ||
-        t.region.toLowerCase().includes(q) ||
-        t.tags.some(tag => tag.toLowerCase().includes(q))
-      );
+    async function loadTrails() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetchTrails({
+          limit: 100,
+          offset: 0,
+          q: query.trim() || undefined,
+          difficulty: difficulty !== 'all' ? difficulty : undefined,
+          region: region !== 'All Regions' ? region : undefined,
+          max_days: maxDays < 30 ? maxDays : undefined,
+          sort_by: sortBy as 'rating' | 'distance' | 'elevation' | 'reviews',
+        });
+
+        if (!cancelled) {
+          setTotal(response.total);
+          setTrails(response.trails.map(toTrailCardModel));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load trails');
+          setTotal(0);
+          setTrails([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
 
-    if (difficulty !== 'all') {
-      result = result.filter(t => t.difficulty === difficulty);
-    }
-
-    if (region !== 'All Regions') {
-      result = result.filter(t => t.region === region);
-    }
-
-    result = result.filter(t => parseInt(t.duration) <= maxDays);
-
-    result.sort((a, b) => {
-      if (sortBy === 'rating') return b.rating - a.rating;
-      if (sortBy === 'distance') return a.distance - b.distance;
-      if (sortBy === 'elevation') return a.maxElevation - b.maxElevation;
-      if (sortBy === 'reviews') return b.reviewCount - a.reviewCount;
-      return 0;
-    });
-
-    return result;
-  }, [query, difficulty, region, sortBy, maxDays]);
+    loadTrails();
+    return () => {
+      cancelled = true;
+    };
+  }, [query, difficulty, region, maxDays, sortBy]);
 
   const clearFilters = () => {
     setQuery('');
@@ -255,14 +288,23 @@ export default function ExplorePage() {
           )}>
             <div className="p-4">
               <p className="text-xs text-gray-500 font-medium mb-4">
-                {filtered.length} trail{filtered.length !== 1 ? 's' : ''} found
+                {total} trail{total !== 1 ? 's' : ''} found
               </p>
               <div className={clsx(
                 'grid gap-4',
                 viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'
               )}>
-                {filtered.length > 0 ? (
-                  filtered.map(trail => (
+                {loading ? (
+                  <div className="col-span-full text-center py-16 text-gray-400">
+                    <p className="font-medium">Loading trails...</p>
+                  </div>
+                ) : error ? (
+                  <div className="col-span-full text-center py-16 text-red-500">
+                    <p className="font-medium">Failed to load trails</p>
+                    <p className="text-sm mt-1">{error}</p>
+                  </div>
+                ) : trails.length > 0 ? (
+                  trails.map(trail => (
                     <TrailCard key={trail.id} trail={trail} variant={viewMode === 'split' ? 'compact' : 'default'} />
                   ))
                 ) : (
@@ -280,7 +322,7 @@ export default function ExplorePage() {
         {/* Map panel */}
         {(viewMode === 'map' || viewMode === 'split') && (
           <div className="flex-1 relative">
-            <TrailMap trails={filtered} height="100%" />
+            <TrailMap trails={trails} height="100%" />
           </div>
         )}
       </div>

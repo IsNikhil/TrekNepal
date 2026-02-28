@@ -1,11 +1,42 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, Clock, TrendingUp, ArrowUp, MapPin } from 'lucide-react';
-import { Trail, difficultyColors, difficultyLabel } from '@/data/trails';
 import clsx from 'clsx';
 
+type Difficulty = 'easy' | 'moderate' | 'hard' | 'expert';
+
+export interface TrailCardModel {
+  id: string;
+  name: string;
+  region: string;
+  difficulty: Difficulty;
+  lat: number;
+  lng: number;
+  distance: number;
+  duration: string;
+  maxElevation: number;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  tags: string[];
+}
+
+const difficultyColors: Record<Difficulty, string> = {
+  easy: 'text-green-600 bg-green-50 border-green-200',
+  moderate: 'text-blue-600 bg-blue-50 border-blue-200',
+  hard: 'text-orange-600 bg-orange-50 border-orange-200',
+  expert: 'text-red-600 bg-red-50 border-red-200',
+};
+
+const difficultyLabel: Record<Difficulty, string> = {
+  easy: 'Easy',
+  moderate: 'Moderate',
+  hard: 'Hard',
+  expert: 'Expert',
+};
+
 interface Props {
-  trail: Trail;
+  trail: TrailCardModel;
   variant?: 'default' | 'compact';
 }
 
