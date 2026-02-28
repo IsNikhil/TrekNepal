@@ -1,7 +1,34 @@
 # 🏗️ Backend Architecture Design — Trek Nepal
 
-This document describes the complete backend architecture for the Trek Nepal platform.  
-It includes system design, API structure, data models, service layers, processing pipelines, and development guidelines.
+This document includes:
+- the currently implemented backend state
+- the planned / target architecture roadmap
+
+---
+
+# Currently Implemented
+
+- FastAPI app with `/`, `/health`, and `/trails` routes.
+- In-memory trail storage via `backend/data/seed_trails.py` (non-persistent).
+- Trail endpoints currently available:
+  - GET `/trails`
+  - GET `/trails/{trail_id}`
+  - POST `/trails`
+  - PUT `/trails/{trail_id}`
+  - DELETE `/trails/{trail_id}`
+  - GET `/trails/regions/list`
+  - GET `/trails/difficulty/stats`
+- Service-layer extraction is started for trail list logic (`services/trail_service.py`).
+- Pydantic schemas are active for API contracts (`Trail`, `TrailCreate`, `TrailListResponse`).
+- Test suite is available under `backend/tests` with pytest + TestClient.
+- No PostgreSQL/PostGIS persistence is active yet.
+- No Docker runtime setup is active yet.
+
+---
+
+# Planned / Target Architecture
+
+The sections below describe the target architecture and roadmap items that are not fully implemented yet.
 
 ---
 

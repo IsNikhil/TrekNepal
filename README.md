@@ -24,11 +24,36 @@ The goal of the project is to provide accurate route data, offline navigation, w
 
 ## Tech Stack (High-Level)
 - *Backend:* Python, FastAPI
-- *Database:* PostgreSQL + PostGIS
+- *Database:* In-memory trail seed data (current), PostgreSQL + PostGIS (planned)
 - *Maps:* OpenStreetMap, offline map tiles
 - *AI:* LLM-based virtual guide
-- *Frontend:* Mobile app (planned)
-- *Dev Tools:* VS Code, Docker (optional)
+- *Frontend:* Next.js web app
+- *Dev Tools:* VS Code, Docker (planned)
+
+---
+
+## Current Implementation State
+- FastAPI backend is active with trail listing and mutation endpoints.
+- Trail storage is currently in-memory (`backend/data/seed_trails.py`) and non-persistent.
+- Next.js frontend is active; `/explore` fetches trail data from backend.
+- pytest test suite is available under `backend/tests` using `fastapi.testclient.TestClient`.
+- Dockerized backend and PostgreSQL/PostGIS are planned, not active yet.
+
+---
+
+## Run Backend
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app:app --reload --port 8000
+```
+
+---
+
+## Run Tests
+```bash
+python -m pytest -q backend/tests
+```
 
 ---
 

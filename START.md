@@ -36,14 +36,17 @@ uvicorn app:app --reload --port 8000
 
 ## API Endpoints
 
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/` | API info |
-| GET | `/health` | Health check |
-| GET | `/trails` | List/filter trails |
-| GET | `/trails/{id}` | Trail detail |
-| GET | `/trails/regions/list` | All regions |
-| GET | `/trails/difficulty/stats` | Difficulty distribution |
+| Method | URL | Description | Status |
+|--------|-----|-------------|--------|
+| GET | `/` | API info | 200 |
+| GET | `/health` | Health check | 200 |
+| GET | `/trails` | List/filter trails | 200 |
+| GET | `/trails/{id}` | Trail detail | 200, 404 |
+| POST | `/trails` | Create trail | 201 |
+| PUT | `/trails/{trail_id}` | Update trail | 200, 404 |
+| DELETE | `/trails/{trail_id}` | Delete trail | 204, 404 |
+| GET | `/trails/regions/list` | All regions | 200 |
+| GET | `/trails/difficulty/stats` | Difficulty distribution | 200 |
 
 ### Filter params for `/trails`:
 - `?q=everest` — search
